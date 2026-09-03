@@ -1,0 +1,10 @@
+﻿@page
+@model FoodOrderingSystem.Web.Pages.LogoutModel
+
+@{
+    ViewData["Title"] = "Logout";
+}
+
+<form method="post">
+    @Html.AntiForgeryToken()
+</form>

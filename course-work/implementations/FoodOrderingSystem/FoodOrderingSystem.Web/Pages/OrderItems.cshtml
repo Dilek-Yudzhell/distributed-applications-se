@@ -1,0 +1,653 @@
+﻿@page
+@model FoodOrderingSystem.Web.Pages.OrderItemsModel
+
+@{
+    ViewData["Title"] = "Order Items";
+}
+
+<div class="container mt-4">
+
+    <h1 class="mb-4">
+        Order Items
+    </h1>
+
+
+    <!-- SUCCESS MESSAGE -->
+    @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+    {
+        <div class="alert alert-success">
+            @Model.SuccessMessage
+        </div>
+    }
+
+
+    <!-- ERROR MESSAGE -->
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            @Model.ErrorMessage
+        </div>
+    }
+
+
+    <!-- ====================================================== -->
+    <!-- SEARCH -->
+    <!-- ====================================================== -->
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            <h2 class="mb-0">
+                Search Order Items
+            </h2>
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="get">
+
+                <div class="row">
+
+                    <!-- ORDER ID -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            Order ID
+                        </label>
+
+                        <input type="number"
+                               class="form-control"
+                               name="SearchOrderId"
+                               value="@Model.SearchOrderId"
+                               placeholder="Enter Order ID" />
+
+                    </div>
+
+
+                    <!-- MENU ITEM ID -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            Menu Item ID
+                        </label>
+
+                        <input type="number"
+                               class="form-control"
+                               name="SearchMenuItemId"
+                               value="@Model.SearchMenuItemId"
+                               placeholder="Enter Menu Item ID" />
+
+                    </div>
+
+
+                    <!-- SORT -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            Sort By
+                        </label>
+
+                        <select class="form-select"
+                                name="SortBy">
+
+                            <option value="id"
+                                    selected="@(Model.SortBy == "id")">
+                                ID
+                            </option>
+
+                            <option value="orderid"
+                                    selected="@(Model.SortBy == "orderid")">
+                                Order ID
+                            </option>
+
+                            <option value="menuitemid"
+                                    selected="@(Model.SortBy == "menuitemid")">
+                                Menu Item ID
+                            </option>
+
+                            <option value="quantity"
+                                    selected="@(Model.SortBy == "quantity")">
+                                Quantity
+                            </option>
+
+                            <option value="price"
+                                    selected="@(Model.SortBy == "price")">
+                                Price
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <div class="row">
+
+                    <!-- PAGE SIZE -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            Page Size
+                        </label>
+
+                        <select class="form-select"
+                                name="PageSize">
+
+                            <option value="5"
+                                    selected="@(Model.PageSize == 5)">
+                                5
+                            </option>
+
+                            <option value="10"
+                                    selected="@(Model.PageSize == 10)">
+                                10
+                            </option>
+
+                            <option value="20"
+                                    selected="@(Model.PageSize == 20)">
+                                20
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <button type="submit"
+                        class="btn btn-primary">
+
+                    Search
+
+                </button>
+
+
+                <a asp-page="/OrderItems"
+                   class="btn btn-secondary">
+
+                    Clear
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ====================================================== -->
+    <!-- ADD / EDIT FORM -->
+    <!-- ====================================================== -->
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            <h2 class="mb-0">
+
+                @if (Model.EditId.HasValue)
+                {
+                    <span>Edit Order Item</span>
+                }
+                else
+                {
+                    <span>Add Order Item</span>
+                }
+
+            </h2>
+
+        </div>
+
+
+        <div class="card-body">
+
+            @if (Model.EditId.HasValue)
+            {
+                <form method="post"
+                      asp-page-handler="Edit">
+
+                    <input type="hidden"
+                           name="id"
+                           value="@Model.EditId.Value" />
+
+                    <div class="row">
+
+                        <!-- ORDER -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Order
+                            </label>
+
+                            <select asp-for="Input.OrderId"
+                                    asp-items="Model.OrderOptions"
+                                    class="form-select">
+
+                                <option value="0">
+                                    -- Select Order --
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- MENU ITEM -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Menu Item
+                            </label>
+
+                            <select asp-for="Input.MenuItemId"
+                                    asp-items="Model.MenuItemOptions"
+                                    class="form-select">
+
+                                <option value="0">
+                                    -- Select Menu Item --
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="row">
+
+                        <!-- QUANTITY -->
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+                                Quantity
+                            </label>
+
+                            <input asp-for="Input.Quantity"
+                                   type="number"
+                                   min="1"
+                                   max="100"
+                                   class="form-control" />
+
+                        </div>
+
+
+                        <!-- PRICE -->
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+                                Unit Price
+                            </label>
+
+                            <input asp-for="Input.UnitPrice"
+                                   type="number"
+                                   min="0.01"
+                                   max="10000"
+                                   step="0.01"
+                                   class="form-control" />
+
+                        </div>
+
+
+                        <!-- NOTES -->
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+                                Notes
+                            </label>
+
+                            <input asp-for="Input.Notes"
+                                   type="text"
+                                   maxlength="250"
+                                   class="form-control"
+                                   placeholder="Optional notes" />
+
+                        </div>
+
+                    </div>
+
+
+                    <button type="submit"
+                            class="btn btn-warning">
+
+                        Update Order Item
+
+                    </button>
+
+
+                    <a asp-page="/OrderItems"
+                       class="btn btn-secondary">
+
+                        Cancel
+
+                    </a>
+
+                </form>
+            }
+            else
+            {
+                <form method="post">
+
+                    <div class="row">
+
+                        <!-- ORDER -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Order
+                            </label>
+
+                            <select asp-for="Input.OrderId"
+                                    asp-items="Model.OrderOptions"
+                                    class="form-select">
+
+                                <option value="0">
+                                    -- Select Order --
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- MENU ITEM -->
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Menu Item
+                            </label>
+
+                            <select asp-for="Input.MenuItemId"
+                                    asp-items="Model.MenuItemOptions"
+                                    class="form-select">
+
+                                <option value="0">
+                                    -- Select Menu Item --
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="row">
+
+                        <!-- QUANTITY -->
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+                                Quantity
+                            </label>
+
+                            <input asp-for="Input.Quantity"
+                                   type="number"
+                                   min="1"
+                                   max="100"
+                                   class="form-control"
+                                   value="1" />
+
+                        </div>
+
+
+                        <!-- PRICE -->
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+                                Unit Price
+                            </label>
+
+                            <input asp-for="Input.UnitPrice"
+                                   type="number"
+                                   min="0.01"
+                                   max="10000"
+                                   step="0.01"
+                                   class="form-control"
+                                   placeholder="15.00" />
+
+                        </div>
+
+
+                        <!-- NOTES -->
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+                                Notes
+                            </label>
+
+                            <input asp-for="Input.Notes"
+                                   type="text"
+                                   maxlength="250"
+                                   class="form-control"
+                                   placeholder="Optional notes" />
+
+                        </div>
+
+                    </div>
+
+
+                    <button type="submit"
+                            class="btn btn-success">
+
+                        Add Order Item
+
+                    </button>
+
+                </form>
+            }
+
+        </div>
+
+    </div>
+
+
+    <!-- ====================================================== -->
+    <!-- LIST -->
+    <!-- ====================================================== -->
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <h2 class="mb-0">
+                Order Item List
+            </h2>
+
+        </div>
+
+        <div class="card-body">
+
+            @if (Model.OrderItems.Count == 0)
+            {
+                <div class="alert alert-info">
+
+                    No order items found.
+
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+
+                    <table class="table table-bordered table-striped">
+
+                        <thead class="table-dark">
+
+                            <tr>
+
+                                <th>
+                                    ID
+                                </th>
+
+                                <th>
+                                    Order ID
+                                </th>
+
+                                <th>
+                                    Menu Item ID
+                                </th>
+
+                                <th>
+                                    Quantity
+                                </th>
+
+                                <th>
+                                    Unit Price
+                                </th>
+
+                                <th>
+                                    Notes
+                                </th>
+
+                                <th>
+                                    Actions
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            @foreach (var item in Model.OrderItems)
+                            {
+                                <tr>
+
+                                    <td>
+                                        @item.Id
+                                    </td>
+
+                                    <td>
+                                        @item.OrderId
+                                    </td>
+
+                                    <td>
+                                        @item.MenuItemId
+                                    </td>
+
+                                    <td>
+                                        @item.Quantity
+                                    </td>
+
+                                    <td>
+                                        @item.UnitPrice.ToString("F2")
+                                    </td>
+
+                                    <td>
+                                        @item.Notes
+                                    </td>
+
+                                    <td>
+
+                                        <a asp-page="/OrderItems"
+                                           asp-route-editId="@item.Id"
+                                           class="btn btn-warning btn-sm">
+
+                                            Edit
+
+                                        </a>
+
+
+                                        <form method="post"
+                                              asp-page-handler="Delete"
+                                              style="display:inline;">
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@item.Id" />
+
+                                            <button type="submit"
+                                                    class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('Are you sure you want to delete this order item?');">
+
+                                                Delete
+
+                                            </button>
+
+                                        </form>
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            }
+
+
+            <!-- ================================================= -->
+            <!-- PAGINATION -->
+            <!-- ================================================= -->
+
+            <div class="d-flex justify-content-center mt-4">
+
+                @if (Model.Page > 1)
+                {
+                    <a asp-page="/OrderItems"
+                       asp-route-Page="@(Model.Page - 1)"
+                       asp-route-PageSize="@Model.PageSize"
+                       asp-route-SearchOrderId="@Model.SearchOrderId"
+                       asp-route-SearchMenuItemId="@Model.SearchMenuItemId"
+                       asp-route-SortBy="@Model.SortBy"
+                       class="btn btn-secondary me-2">
+
+                        Previous
+
+                    </a>
+                }
+
+
+                <span class="btn btn-primary">
+
+                    Page @Model.Page
+
+                </span>
+
+
+                @if (Model.HasNextPage)
+                {
+                    <a asp-page="/OrderItems"
+                       asp-route-Page="@(Model.Page + 1)"
+                       asp-route-PageSize="@Model.PageSize"
+                       asp-route-SearchOrderId="@Model.SearchOrderId"
+                       asp-route-SearchMenuItemId="@Model.SearchMenuItemId"
+                       asp-route-SortBy="@Model.SortBy"
+                       class="btn btn-primary ms-2">
+
+                        Next
+
+                    </a>
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

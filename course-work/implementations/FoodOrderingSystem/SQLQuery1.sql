@@ -1,0 +1,2 @@
+﻿ALTER TABLE dbo.OrderItems
+ADD Notes NVARCHAR(250) NULL;

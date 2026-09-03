@@ -1,0 +1,156 @@
+﻿@page
+@model IndexModel
+
+@{
+    ViewData["Title"] = "Food Ordering System";
+}
+
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .hero {
+        background: linear-gradient(135deg, #ff7043, #ff9800);
+        color: white;
+        padding: 70px 30px;
+        border-radius: 20px;
+        margin-top: 30px;
+        text-align: center;
+    }
+
+    .hero h1 {
+        font-size: 48px;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .hero p {
+        font-size: 20px;
+        margin-bottom: 30px;
+    }
+
+    .menu-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        height: 100%;
+        transition: transform 0.2s;
+    }
+
+    .menu-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .menu-icon {
+        font-size: 45px;
+        margin-bottom: 15px;
+    }
+
+    .menu-card h3 {
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+
+    .menu-card p {
+        color: #666;
+        min-height: 50px;
+    }
+
+    .btn-food {
+        background-color: #ff7043;
+        border: none;
+        color: white;
+        padding: 10px 25px;
+        border-radius: 25px;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 10px;
+    }
+
+    .btn-food:hover {
+        background-color: #e85d32;
+        color: white;
+    }
+
+    .section-title {
+        text-align: center;
+        margin: 50px 0 30px;
+        font-weight: bold;
+    }
+</style>
+
+<div class="container">
+
+    <div class="hero">
+        <h1>🍔 Food Ordering System</h1>
+
+        <p>
+            Welcome to our food ordering system!
+            Choose a restaurant, explore the menu and place your order.
+        </p>
+
+        <a href="#" class="btn btn-light btn-lg">
+            Start Ordering
+        </a>
+    </div>
+
+    <h2 class="section-title">
+        What would you like to do?
+    </h2>
+
+    <div class="row g-4">
+
+        <div class="col-md-4">
+            <div class="menu-card">
+                <div class="menu-icon">🍽️</div>
+
+                <h3>Restaurants</h3>
+
+                <p>
+                    Browse available restaurants and discover different cuisines.
+                </p>
+
+                <a href="#" class="btn-food">
+                    View Restaurants
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="menu-card">
+                <div class="menu-icon">🍕</div>
+
+                <h3>Menu</h3>
+
+                <p>
+                    Explore delicious food and check prices and availability.
+                </p>
+
+                <a href="#" class="btn-food">
+                    View Menu
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="menu-card">
+                <div class="menu-icon">📦</div>
+
+                <h3>My Orders</h3>
+
+                <p>
+                    Check your orders and follow their current status.
+                </p>
+
+                <a href="#" class="btn-food">
+                    My Orders
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+</div>

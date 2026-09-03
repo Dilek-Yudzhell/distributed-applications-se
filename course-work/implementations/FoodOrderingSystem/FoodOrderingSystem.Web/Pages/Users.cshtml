@@ -1,0 +1,681 @@
+﻿@page
+@model FoodOrderingSystem.Web.Pages.UsersModel
+
+@{
+    ViewData["Title"] = "Users";
+}
+
+<div class="container mt-5">
+
+    <h1 class="mb-4">Users</h1>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            @Model.ErrorMessage
+        </div>
+    }
+
+
+    <!-- =====================================================
+         SEARCH USERS
+         ===================================================== -->
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+            <strong>Search Users</strong>
+        </div>
+
+        <div class="card-body">
+
+            <form method="get">
+
+                <div class="row">
+
+                    <!-- FIRST NAME -->
+
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+                            First Name
+                        </label>
+
+                        <input type="text"
+                               name="firstName"
+                               class="form-control"
+                               value="@Model.CurrentFirstName"
+                               maxlength="50" />
+
+                    </div>
+
+
+                    <!-- LAST NAME -->
+
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+                            Last Name
+                        </label>
+
+                        <input type="text"
+                               name="lastName"
+                               class="form-control"
+                               value="@Model.CurrentLastName"
+                               maxlength="50" />
+
+                    </div>
+
+
+                    <!-- SORT -->
+
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+                            Sort By
+                        </label>
+
+                        <select name="sortBy"
+                                class="form-select">
+
+                            @if (Model.CurrentSortBy == "firstName")
+                            {
+                                <option value="firstName" selected>
+                                    First Name
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="firstName">
+                                    First Name
+                                </option>
+                            }
+
+                            @if (Model.CurrentSortBy == "lastName")
+                            {
+                                <option value="lastName" selected>
+                                    Last Name
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="lastName">
+                                    Last Name
+                                </option>
+                            }
+
+                            @if (Model.CurrentSortBy == "email")
+                            {
+                                <option value="email" selected>
+                                    Email
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="email">
+                                    Email
+                                </option>
+                            }
+
+                            @if (Model.CurrentSortBy == "date")
+                            {
+                                <option value="date" selected>
+                                    Registration Date
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="date">
+                                    Registration Date
+                                </option>
+                            }
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- PAGE SIZE -->
+
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+                            Page Size
+                        </label>
+
+                        <select name="pageSize"
+                                class="form-select">
+
+                            @if (Model.PageSize == 5)
+                            {
+                                <option value="5" selected>
+                                    5
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="5">
+                                    5
+                                </option>
+                            }
+
+                            @if (Model.PageSize == 10)
+                            {
+                                <option value="10" selected>
+                                    10
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="10">
+                                    10
+                                </option>
+                            }
+
+                            @if (Model.PageSize == 20)
+                            {
+                                <option value="20" selected>
+                                    20
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="20">
+                                    20
+                                </option>
+                            }
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <div class="mt-3">
+
+                    <button type="submit"
+                            class="btn btn-primary">
+                        Search
+                    </button>
+
+                    <a asp-page="/Users"
+                       class="btn btn-secondary">
+                        Clear
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ADD USER
+         ===================================================== -->
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+            <strong>Add User</strong>
+        </div>
+
+        <div class="card-body">
+
+            <form method="post">
+
+                <div class="row">
+
+                    <!-- FIRST NAME -->
+
+                    <div class="col-md-2">
+
+                        <label class="form-label">
+                            First Name
+                        </label>
+
+                        <input type="text"
+                               name="FirstName"
+                               class="form-control"
+                               value="@Model.FirstName"
+                               maxlength="50"
+                               required />
+
+                    </div>
+
+
+                    <!-- LAST NAME -->
+
+                    <div class="col-md-2">
+
+                        <label class="form-label">
+                            Last Name
+                        </label>
+
+                        <input type="text"
+                               name="LastName"
+                               class="form-control"
+                               value="@Model.LastName"
+                               maxlength="50"
+                               required />
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="col-md-2">
+
+                        <label class="form-label">
+                            Email
+                        </label>
+
+                        <input type="email"
+                               name="Email"
+                               class="form-control"
+                               value="@Model.Email"
+                               maxlength="100"
+                               required />
+
+                    </div>
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="col-md-2">
+
+                        <label class="form-label">
+                            Password
+                        </label>
+
+                        <input type="password"
+                               name="Password"
+                               class="form-control"
+                               minlength="6"
+                               maxlength="100"
+                               required />
+
+                    </div>
+
+
+                    <!-- PHONE -->
+
+                    <div class="col-md-2">
+
+                        <label class="form-label">
+                            Phone
+                        </label>
+
+                        <input type="text"
+                               name="Phone"
+                               class="form-control"
+                               value="@Model.Phone"
+                               maxlength="20"
+                               required />
+
+                    </div>
+
+                </div>
+
+
+                <button type="submit"
+                        class="btn btn-success mt-3">
+                    Add User
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         USER LIST
+         ===================================================== -->
+
+    <div class="card">
+
+        <div class="card-header">
+            <strong>User List</strong>
+        </div>
+
+        <div class="card-body">
+
+            @if (Model.Users.Any())
+            {
+                <div class="table-responsive">
+
+                    <table class="table table-bordered table-striped">
+
+                        <thead class="table-dark">
+
+                            <tr>
+
+                                <th>ID</th>
+
+                                <th>First Name</th>
+
+                                <th>Last Name</th>
+
+                                <th>Email</th>
+
+                                <th>Phone</th>
+
+                                <th>Registration Date</th>
+
+                                <th>Status</th>
+
+                                <th>Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            @foreach (var user in Model.Users)
+                            {
+                                <tr>
+
+                                    <td>
+                                        @user.Id
+                                    </td>
+
+                                    <td>
+                                        @user.FirstName
+                                    </td>
+
+                                    <td>
+                                        @user.LastName
+                                    </td>
+
+                                    <td>
+                                        @user.Email
+                                    </td>
+
+                                    <td>
+                                        @user.Phone
+                                    </td>
+
+                                    <td>
+                                        @user.RegistrationDate.ToString("dd.MM.yyyy")
+                                    </td>
+
+                                    <td>
+
+                                        @if (user.IsActive)
+                                        {
+                                            <span class="badge bg-success">
+                                                Active
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">
+                                                Inactive
+                                            </span>
+                                        }
+
+                                    </td>
+
+                                    <td>
+
+                                        <!-- EDIT -->
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-warning"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editModal-@user.Id">
+                                            Edit
+                                        </button>
+
+
+                                        <!-- DELETE -->
+
+                                        <form method="post"
+                                              asp-page-handler="Delete"
+                                              style="display:inline;">
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@user.Id" />
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-danger"
+                                                    onclick="return confirm('Are you sure you want to delete this user?');">
+                                                Delete
+                                            </button>
+
+                                        </form>
+
+                                    </td>
+
+                                </tr>
+
+
+                                <!-- =================================================
+                                     EDIT MODAL
+                                     ================================================= -->
+
+                                <div class="modal fade"
+                                     id="editModal-@user.Id"
+                                     tabindex="-1"
+                                     aria-hidden="true">
+
+                                    <div class="modal-dialog">
+
+                                        <div class="modal-content">
+
+                                            <form method="post"
+                                                  asp-page-handler="Edit">
+
+                                                <div class="modal-header">
+
+                                                    <h5 class="modal-title">
+                                                        Edit User #@user.Id
+                                                    </h5>
+
+                                                    <button type="button"
+                                                            class="btn-close"
+                                                            data-bs-dismiss="modal">
+                                                    </button>
+
+                                                </div>
+
+
+                                                <div class="modal-body">
+
+                                                    <!-- ID -->
+
+                                                    <input type="hidden"
+                                                           name="EditId"
+                                                           value="@user.Id" />
+
+
+                                                    <!-- FIRST NAME -->
+
+                                                    <div class="mb-3">
+
+                                                        <label class="form-label">
+                                                            First Name
+                                                        </label>
+
+                                                        <input type="text"
+                                                               name="EditFirstName"
+                                                               value="@user.FirstName"
+                                                               class="form-control"
+                                                               maxlength="50"
+                                                               required />
+
+                                                    </div>
+
+
+                                                    <!-- LAST NAME -->
+
+                                                    <div class="mb-3">
+
+                                                        <label class="form-label">
+                                                            Last Name
+                                                        </label>
+
+                                                        <input type="text"
+                                                               name="EditLastName"
+                                                               value="@user.LastName"
+                                                               class="form-control"
+                                                               maxlength="50"
+                                                               required />
+
+                                                    </div>
+
+
+                                                    <!-- EMAIL -->
+
+                                                    <div class="mb-3">
+
+                                                        <label class="form-label">
+                                                            Email
+                                                        </label>
+
+                                                        <input type="email"
+                                                               name="EditEmail"
+                                                               value="@user.Email"
+                                                               class="form-control"
+                                                               maxlength="100"
+                                                               required />
+
+                                                    </div>
+
+
+                                                    <!-- PASSWORD -->
+
+                                                    <div class="mb-3">
+
+                                                        <label class="form-label">
+                                                            New Password
+                                                        </label>
+
+                                                        <input type="password"
+                                                               name="EditPassword"
+                                                               class="form-control"
+                                                               minlength="6"
+                                                               maxlength="100"
+                                                               required />
+
+                                                    </div>
+
+
+                                                    <!-- PHONE -->
+
+                                                    <div class="mb-3">
+
+                                                        <label class="form-label">
+                                                            Phone
+                                                        </label>
+
+                                                        <input type="text"
+                                                               name="EditPhone"
+                                                               value="@user.Phone"
+                                                               class="form-control"
+                                                               maxlength="20"
+                                                               required />
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                <!-- FOOTER -->
+
+                                                <div class="modal-footer">
+
+                                                    <button type="button"
+                                                            class="btn btn-secondary"
+                                                            data-bs-dismiss="modal">
+                                                        Cancel
+                                                    </button>
+
+                                                    <button type="submit"
+                                                            class="btn btn-primary">
+                                                        Save Changes
+                                                    </button>
+
+                                                </div>
+
+                                            </form>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- =================================================
+                     PAGINATION
+                     ================================================= -->
+
+                <div class="d-flex justify-content-center mt-4">
+
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <a class="btn btn-outline-primary me-2"
+                           asp-page="/Users"
+                           asp-route-page="@(Model.CurrentPage - 1)"
+                           asp-route-pageSize="@Model.PageSize"
+                           asp-route-firstName="@Model.CurrentFirstName"
+                           asp-route-lastName="@Model.CurrentLastName"
+                           asp-route-sortBy="@Model.CurrentSortBy">
+                            Previous
+                        </a>
+                    }
+
+
+                    <span class="btn btn-primary me-2">
+                        Page @Model.CurrentPage
+                    </span>
+
+
+                    <a class="btn btn-outline-primary"
+                       asp-page="/Users"
+                       asp-route-page="@(Model.CurrentPage + 1)"
+                       asp-route-pageSize="@Model.PageSize"
+                       asp-route-firstName="@Model.CurrentFirstName"
+                       asp-route-lastName="@Model.CurrentLastName"
+                       asp-route-sortBy="@Model.CurrentSortBy">
+                        Next
+                    </a>
+
+                </div>
+
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    No users found.
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+</div>
+
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+}

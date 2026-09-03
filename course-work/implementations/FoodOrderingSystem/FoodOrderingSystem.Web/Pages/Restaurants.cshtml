@@ -1,0 +1,437 @@
+﻿@page
+@model FoodOrderingSystem.Web.Pages.RestaurantsModel
+
+@{
+    ViewData["Title"] = "Restaurants";
+}
+
+<div class="container mt-5">
+
+    <h1 class="mb-4">Restaurants</h1>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+    {
+        <div class="alert alert-success">
+            @Model.SuccessMessage
+        </div>
+    }
+
+    <!-- ============================= -->
+    <!-- ADD RESTAURANT -->
+    <!-- ============================= -->
+
+    <div class="card mb-5 shadow-sm">
+
+        <div class="card-header bg-dark text-white">
+            <h3 class="mb-0">Add Restaurant</h3>
+        </div>
+
+        <div class="card-body">
+
+            <form method="post" asp-page-handler="Add">
+
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+
+                    <input type="text"
+                           name="name"
+                           class="form-control"
+                           placeholder="Restaurant name"
+                           maxlength="100"
+                           required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Address</label>
+
+                    <input type="text"
+                           name="address"
+                           class="form-control"
+                           placeholder="Restaurant address"
+                           maxlength="250"
+                           required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Phone</label>
+
+                    <input type="text"
+                           name="phone"
+                           class="form-control"
+                           placeholder="Phone number"
+                           maxlength="20"
+                           required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Cuisine</label>
+
+                    <input type="text"
+                           name="cuisineType"
+                           class="form-control"
+                           placeholder="Italian, Bulgarian, Turkish..."
+                           maxlength="50"
+                           required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Rating</label>
+
+                    <input type="number"
+                           name="rating"
+                           class="form-control"
+                           value="0"
+                           min="0"
+                           max="5"
+                           step="0.01"
+                           required />
+                </div>
+
+                <div class="form-check mb-3">
+
+                    <input type="checkbox"
+                           name="isActive"
+                           value="true"
+                           class="form-check-input"
+                           checked />
+
+                    <label class="form-check-label">
+                        Active
+                    </label>
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-primary">
+
+                    + Add Restaurant
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- RESTAURANT LIST -->
+    <!-- ============================= -->
+
+    <h2 class="mb-3">Restaurant List</h2>
+
+    @if (Model.Restaurants.Any())
+    {
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-striped align-middle">
+
+                <thead class="table-dark">
+
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Address</th>
+                        <th>Phone</th>
+                        <th>Cuisine</th>
+                        <th>Rating</th>
+                        <th>Active</th>
+                        <th style="width: 180px;">Actions</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @foreach (var restaurant in Model.Restaurants)
+                    {
+                        <tr>
+
+                            <td>
+                                @restaurant.Id
+                            </td>
+
+                            <td>
+                                <strong>
+                                    @restaurant.Name
+                                </strong>
+                            </td>
+
+                            <td>
+                                @restaurant.Address
+                            </td>
+
+                            <td>
+                                @restaurant.Phone
+                            </td>
+
+                            <td>
+                                @restaurant.CuisineType
+                            </td>
+
+                            <td>
+                                ⭐ @restaurant.Rating.ToString("0.00")
+                            </td>
+
+                            <td>
+
+                                @if (restaurant.IsActive)
+                                {
+                                    <span class="badge bg-success">
+                                        Active
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">
+                                        Inactive
+                                    </span>
+                                }
+
+                            </td>
+
+                            <td>
+
+                                <!-- EDIT BUTTON -->
+
+                                <button type="button"
+                                        class="btn btn-warning btn-sm mb-1"
+                                        onclick="showEditForm(@restaurant.Id)">
+
+                                    Edit
+
+                                </button>
+
+
+                                <!-- DELETE -->
+
+                                <form method="post"
+                                      asp-page-handler="Delete"
+                                      style="display:inline;">
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@restaurant.Id" />
+
+                                    <button type="submit"
+                                            class="btn btn-danger btn-sm mb-1"
+                                            onclick="return confirm('Are you sure you want to delete this restaurant?');">
+
+                                        Delete
+
+                                    </button>
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+
+
+                        <!-- ============================= -->
+                        <!-- EDIT FORM -->
+                        <!-- ============================= -->
+
+                        <tr id="edit-@restaurant.Id"
+                            style="display:none;">
+
+                            <td colspan="8">
+
+                                <div class="card">
+
+                                    <div class="card-header bg-warning">
+
+                                        <strong>
+                                            Edit Restaurant
+                                        </strong>
+
+                                    </div>
+
+                                    <div class="card-body">
+
+                                        <form method="post"
+                                              asp-page-handler="Edit">
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@restaurant.Id" />
+
+                                            <div class="mb-2">
+
+                                                <label class="form-label">
+                                                    Name
+                                                </label>
+
+                                                <input type="text"
+                                                       name="name"
+                                                       value="@restaurant.Name"
+                                                       class="form-control"
+                                                       maxlength="100"
+                                                       required />
+
+                                            </div>
+
+
+                                            <div class="mb-2">
+
+                                                <label class="form-label">
+                                                    Address
+                                                </label>
+
+                                                <input type="text"
+                                                       name="address"
+                                                       value="@restaurant.Address"
+                                                       class="form-control"
+                                                       maxlength="250"
+                                                       required />
+
+                                            </div>
+
+
+                                            <div class="mb-2">
+
+                                                <label class="form-label">
+                                                    Phone
+                                                </label>
+
+                                                <input type="text"
+                                                       name="phone"
+                                                       value="@restaurant.Phone"
+                                                       class="form-control"
+                                                       maxlength="20"
+                                                       required />
+
+                                            </div>
+
+
+                                            <div class="mb-2">
+
+                                                <label class="form-label">
+                                                    Cuisine
+                                                </label>
+
+                                                <input type="text"
+                                                       name="cuisineType"
+                                                       value="@restaurant.CuisineType"
+                                                       class="form-control"
+                                                       maxlength="50"
+                                                       required />
+
+                                            </div>
+
+
+                                            <div class="mb-2">
+
+                                                <label class="form-label">
+                                                    Rating
+                                                </label>
+
+                                                <input type="number"
+                                                       name="rating"
+                                                       value="@restaurant.Rating"
+                                                       class="form-control"
+                                                       min="0"
+                                                       max="5"
+                                                       step="0.01"
+                                                       required />
+
+                                            </div>
+
+
+                                            <div class="form-check mb-3">
+
+                                                <input type="checkbox"
+                                                       name="isActive"
+                                                       value="true"
+                                                       class="form-check-input"
+                                                       @(restaurant.IsActive ? "checked" : "") />
+
+                                                <label class="form-check-label">
+                                                    Active
+                                                </label>
+
+                                            </div>
+
+
+                                            <button type="submit"
+                                                    class="btn btn-success">
+
+                                                Save Changes
+
+                                            </button>
+
+
+                                            <button type="button"
+                                                    class="btn btn-secondary"
+                                                    onclick="hideEditForm(@restaurant.Id)">
+
+                                                Cancel
+
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    }
+    else if (string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-info">
+            No restaurants found.
+        </div>
+    }
+
+</div>
+
+
+<!-- ============================= -->
+<!-- JAVASCRIPT -->
+<!-- ============================= -->
+@section Scripts {
+
+    <script>
+
+        function showEditForm(id) {
+
+            const form = document.getElementById("edit-" + id);
+
+            if (form) {
+                form.style.display = "table-row";
+            }
+
+        }
+
+
+        function hideEditForm(id) {
+
+            const form = document.getElementById("edit-" + id);
+
+            if (form) {
+                form.style.display = "none";
+            }
+
+        }
+
+    </script>
+
+}
