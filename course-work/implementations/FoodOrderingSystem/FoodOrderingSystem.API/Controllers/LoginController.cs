@@ -34,17 +34,17 @@ namespace FoodOrderingSystem.API.Controllers
         public async Task<IActionResult> Login(
             [FromBody] LoginDto dto)
         {
-            // Validation
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return ValidationProblem(ModelState);
             }
 
-            // Find user by email
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == dto.Email);
+            var email = dto.Email.Trim();
 
-            // User not found
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u =>
+                    u.Email.ToLower() == email.ToLower());
+
             if (user == null)
             {
                 return Unauthorized(new
@@ -53,7 +53,6 @@ namespace FoodOrderingSystem.API.Controllers
                 });
             }
 
-            // Check active account
             if (!user.IsActive)
             {
                 return Unauthorized(new
@@ -62,7 +61,6 @@ namespace FoodOrderingSystem.API.Controllers
                 });
             }
 
-            // Check password
             var passwordValid =
                 _passwordService.VerifyPassword(
                     user.Password,
@@ -76,7 +74,6 @@ namespace FoodOrderingSystem.API.Controllers
                 });
             }
 
-            // JWT claims
             var claims = new[]
             {
                 new Claim(
@@ -92,30 +89,50 @@ namespace FoodOrderingSystem.API.Controllers
                     user.Email)
             };
 
-            // JWT key
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(
-                    _configuration["Jwt:Key"]!));
+            var jwtKey =
+                _configuration["Jwt:Key"];
 
-            // JWT credentials
-            var credentials = new SigningCredentials(
-                key,
-                SecurityAlgorithms.HmacSha256);
+            var jwtIssuer =
+                _configuration["Jwt:Issuer"];
 
-            // Create token
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddHours(2),
-                signingCredentials: credentials);
+            var jwtAudience =
+                _configuration["Jwt:Audience"];
 
-            // Convert token to string
+            if (string.IsNullOrWhiteSpace(jwtKey) ||
+                string.IsNullOrWhiteSpace(jwtIssuer) ||
+                string.IsNullOrWhiteSpace(jwtAudience))
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new
+                    {
+                        message =
+                            "JWT configuration is missing."
+                    });
+            }
+
+            var key =
+                new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(jwtKey));
+
+            var credentials =
+                new SigningCredentials(
+                    key,
+                    SecurityAlgorithms.HmacSha256);
+
+            var token =
+                new JwtSecurityToken(
+                    issuer: jwtIssuer,
+                    audience: jwtAudience,
+                    claims: claims,
+                    expires:
+                        DateTime.UtcNow.AddHours(2),
+                    signingCredentials: credentials);
+
             var tokenString =
                 new JwtSecurityTokenHandler()
                     .WriteToken(token);
 
-            // Return login result
             return Ok(new
             {
                 message = "Login successful.",

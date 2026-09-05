@@ -1,9 +1,8 @@
-using System.Net;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace FoodOrderingSystem.Web.Pages
 {
@@ -16,523 +15,309 @@ namespace FoodOrderingSystem.Web.Pages
             _httpClientFactory = httpClientFactory;
         }
 
-        // =====================================================
-        // USERS
-        // =====================================================
-
         public List<UserViewModel> Users { get; set; } = new();
+
+        [BindProperty]
+        public UserInputModel NewUser { get; set; } = new();
+
+        [BindProperty]
+        public UserEditModel EditUser { get; set; } = new();
 
         public string ErrorMessage { get; set; } = string.Empty;
 
-        // =====================================================
-        // SEARCH / PAGINATION / SORTING
-        // =====================================================
+        public string SuccessMessage { get; set; } = string.Empty;
 
-        public int CurrentPage { get; set; } = 1;
+        public int PageNumber { get; set; } = 1;
 
-        public int PageSize { get; set; } = 5;
+        public int PageSize { get; set; } = 10;
 
-        public string CurrentFirstName { get; set; } = string.Empty;
+        public int TotalCount { get; set; }
 
-        public string CurrentLastName { get; set; } = string.Empty;
+        public bool HasNextPage { get; set; }
 
-        public string CurrentSortBy { get; set; } = "firstName";
+        public string? SearchFirstName { get; set; }
 
-        // =====================================================
-        // ADD USER
-        // =====================================================
+        public string? SearchLastName { get; set; }
 
-        [BindProperty]
-        public string FirstName { get; set; } = string.Empty;
+        public string SortBy { get; set; } = "id";
 
-        [BindProperty]
-        public string LastName { get; set; } = string.Empty;
 
-        [BindProperty]
-        public string Email { get; set; } = string.Empty;
+        // =========================
+        // GET USERS
+        // =========================
 
-        [BindProperty]
-        public string Password { get; set; } = string.Empty;
-
-        [BindProperty]
-        public string Phone { get; set; } = string.Empty;
-
-        // =====================================================
-        // EDIT USER
-        // =====================================================
-
-        [BindProperty]
-        public int EditId { get; set; }
-
-        [BindProperty]
-        public string EditFirstName { get; set; } = string.Empty;
-
-        [BindProperty]
-        public string EditLastName { get; set; } = string.Empty;
-
-        [BindProperty]
-        public string EditEmail { get; set; } = string.Empty;
-
-        [BindProperty]
-        public string EditPassword { get; set; } = string.Empty;
-
-        [BindProperty]
-        public string EditPhone { get; set; } = string.Empty;
-
-        // =====================================================
-        // GET
-        // =====================================================
-
-        public async Task<IActionResult> OnGetAsync(
-            string? firstName,
-            string? lastName,
+        public async Task OnGetAsync(
+            string? firstName = null,
+            string? lastName = null,
             int page = 1,
-            int pageSize = 5,
-            string sortBy = "firstName")
+            int pageSize = 10,
+            string sortBy = "id")
         {
-            var token =
-                HttpContext.Session.GetString("JwtToken");
-
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                return RedirectToPage("/Login");
-            }
-
-            CurrentPage = page < 1 ? 1 : page;
-
-            PageSize = pageSize < 1 ? 5 : pageSize;
-
-            if (PageSize > 100)
-            {
-                PageSize = 100;
-            }
-
-            CurrentFirstName =
-                firstName ?? string.Empty;
-
-            CurrentLastName =
-                lastName ?? string.Empty;
-
-            CurrentSortBy =
-                string.IsNullOrWhiteSpace(sortBy)
-                    ? "firstName"
-                    : sortBy;
+            SearchFirstName = firstName;
+            SearchLastName = lastName;
+            PageNumber = page;
+            PageSize = pageSize;
+            SortBy = sortBy;
 
             await LoadUsersAsync(
-                token,
-                CurrentPage,
-                PageSize,
-                CurrentFirstName,
-                CurrentLastName,
-                CurrentSortBy);
-
-            return Page();
+                firstName,
+                lastName,
+                page,
+                pageSize,
+                sortBy);
         }
 
-        // =====================================================
+
+        // =========================
         // ADD USER
-        // =====================================================
+        // =========================
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAddAsync()
         {
-            var token =
-                HttpContext.Session.GetString("JwtToken");
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
 
-            if (string.IsNullOrWhiteSpace(token))
+            // Remove validation belonging to Edit form
+            foreach (var key in ModelState.Keys
+                         .Where(k => k.StartsWith("EditUser."))
+                         .ToList())
             {
-                return RedirectToPage("/Login");
+                ModelState.Remove(key);
             }
 
-            if (string.IsNullOrWhiteSpace(FirstName))
+            if (!ModelState.IsValid)
             {
-                ErrorMessage =
-                    "First Name is required.";
-
-                await LoadUsersAsync(token);
-
+                await LoadUsersAsync();
                 return Page();
             }
-
-            if (FirstName.Length > 50)
-            {
-                ErrorMessage =
-                    "First Name cannot be longer than 50 characters.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            if (string.IsNullOrWhiteSpace(LastName))
-            {
-                ErrorMessage =
-                    "Last Name is required.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            if (LastName.Length > 50)
-            {
-                ErrorMessage =
-                    "Last Name cannot be longer than 50 characters.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            if (string.IsNullOrWhiteSpace(Email))
-            {
-                ErrorMessage =
-                    "Email is required.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            if (Email.Length > 100)
-            {
-                ErrorMessage =
-                    "Email cannot be longer than 100 characters.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            if (string.IsNullOrWhiteSpace(Password))
-            {
-                ErrorMessage =
-                    "Password is required.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            if (Password.Length < 6)
-            {
-                ErrorMessage =
-                    "Password must contain at least 6 characters.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            if (Password.Length > 100)
-            {
-                ErrorMessage =
-                    "Password cannot be longer than 100 characters.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            if (string.IsNullOrWhiteSpace(Phone))
-            {
-                ErrorMessage =
-                    "Phone is required.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            if (Phone.Length > 20)
-            {
-                ErrorMessage =
-                    "Phone cannot be longer than 20 characters.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            var user = new UserInputModel
-            {
-                FirstName = FirstName,
-                LastName = LastName,
-                Email = Email,
-                Password = Password,
-                Phone = Phone
-            };
 
             try
             {
-                var client =
-                    CreateClient(token);
+                // Registration endpoint is AllowAnonymous
+                var client = CreateClient();
 
-                var response =
-                    await client.PostAsJsonAsync(
-                        "api/Users",
-                        user);
-
-                var responseBody =
-                    await response.Content.ReadAsStringAsync();
+                var response = await client.PostAsJsonAsync(
+                    "api/Users",
+                    new
+                    {
+                        firstName = NewUser.FirstName,
+                        lastName = NewUser.LastName,
+                        email = NewUser.Email,
+                        password = NewUser.Password,
+                        phone = NewUser.Phone
+                    });
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return RedirectToPage();
+                    SuccessMessage =
+                        "User added successfully.";
+
+                    NewUser = new UserInputModel();
+
+                    await LoadUsersAsync();
+
+                    return Page();
                 }
 
-                if (response.StatusCode ==
-                    HttpStatusCode.Unauthorized)
-                {
-                    HttpContext.Session.Clear();
-
-                    return RedirectToPage("/Login");
-                }
+                var error =
+                    await response.Content.ReadAsStringAsync();
 
                 ErrorMessage =
-                    $"API Error ({(int)response.StatusCode}): {responseBody}";
+                    $"Could not add user. API response: {error}";
 
-                await LoadUsersAsync(token);
+                await LoadUsersAsync();
+
+                return Page();
             }
             catch (Exception ex)
             {
                 ErrorMessage =
-                    $"Connection Error: {ex.Message}";
+                    "Could not connect to the API: " +
+                    ex.Message;
 
-                await LoadUsersAsync(token);
+                await LoadUsersAsync();
+
+                return Page();
             }
-
-            return Page();
         }
 
-        // =====================================================
+
+        // =========================
         // EDIT USER
-        // =====================================================
+        // =========================
 
         public async Task<IActionResult> OnPostEditAsync()
         {
-            var token =
-                HttpContext.Session.GetString("JwtToken");
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
 
-            if (string.IsNullOrWhiteSpace(token))
+            // Remove validation belonging to Add form
+            foreach (var key in ModelState.Keys
+                         .Where(k => k.StartsWith("NewUser."))
+                         .ToList())
             {
-                return RedirectToPage("/Login");
+                ModelState.Remove(key);
             }
 
-            if (EditId < 1)
+            if (!ModelState.IsValid)
             {
-                ErrorMessage =
-                    "Invalid user ID.";
-
-                await LoadUsersAsync(token);
-
+                await LoadUsersAsync();
                 return Page();
             }
-
-            if (string.IsNullOrWhiteSpace(EditFirstName))
-            {
-                ErrorMessage =
-                    "First Name is required.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            if (string.IsNullOrWhiteSpace(EditLastName))
-            {
-                ErrorMessage =
-                    "Last Name is required.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            if (string.IsNullOrWhiteSpace(EditEmail))
-            {
-                ErrorMessage =
-                    "Email is required.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            if (string.IsNullOrWhiteSpace(EditPassword))
-            {
-                ErrorMessage =
-                    "Password is required for editing the user.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            if (EditPassword.Length < 6)
-            {
-                ErrorMessage =
-                    "Password must contain at least 6 characters.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            if (string.IsNullOrWhiteSpace(EditPhone))
-            {
-                ErrorMessage =
-                    "Phone is required.";
-
-                await LoadUsersAsync(token);
-
-                return Page();
-            }
-
-            var user = new UserInputModel
-            {
-                FirstName = EditFirstName,
-                LastName = EditLastName,
-                Email = EditEmail,
-                Password = EditPassword,
-                Phone = EditPhone
-            };
 
             try
             {
-                var client =
-                    CreateClient(token);
+                var token =
+                    HttpContext.Session.GetString("JwtToken");
 
-                var response =
-                    await client.PutAsJsonAsync(
-                        $"api/Users/{EditId}",
-                        user);
+                if (string.IsNullOrWhiteSpace(token))
+                {
+                    ErrorMessage =
+                        "You are not logged in.";
 
-                var responseBody =
-                    await response.Content.ReadAsStringAsync();
+                    await LoadUsersAsync();
+
+                    return Page();
+                }
+
+                var client = CreateClient(token);
+
+                var response = await client.PutAsJsonAsync(
+                    $"api/Users/{EditUser.Id}",
+                    new
+                    {
+                        firstName = EditUser.FirstName,
+                        lastName = EditUser.LastName,
+                        email = EditUser.Email,
+                        password = EditUser.Password,
+                        phone = EditUser.Phone,
+                        isActive = EditUser.IsActive
+                    });
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return RedirectToPage();
+                    SuccessMessage =
+                        "User updated successfully.";
+
+                    await LoadUsersAsync();
+
+                    return Page();
                 }
 
-                if (response.StatusCode ==
-                    HttpStatusCode.Unauthorized)
-                {
-                    HttpContext.Session.Clear();
-
-                    return RedirectToPage("/Login");
-                }
+                var error =
+                    await response.Content.ReadAsStringAsync();
 
                 ErrorMessage =
-                    $"API Error ({(int)response.StatusCode}): {responseBody}";
+                    $"Could not update user. API response: {error}";
 
-                await LoadUsersAsync(token);
+                await LoadUsersAsync();
+
+                return Page();
             }
             catch (Exception ex)
             {
                 ErrorMessage =
-                    $"Connection Error: {ex.Message}";
+                    "Could not connect to the API: " +
+                    ex.Message;
 
-                await LoadUsersAsync(token);
+                await LoadUsersAsync();
+
+                return Page();
             }
-
-            return Page();
         }
 
-        // =====================================================
+
+        // =========================
         // DELETE USER
-        // =====================================================
+        // =========================
 
-        public async Task<IActionResult> OnPostDeleteAsync(
-            int id)
+        public async Task<IActionResult> OnPostDeleteAsync(int id)
         {
-            var token =
-                HttpContext.Session.GetString("JwtToken");
-
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                return RedirectToPage("/Login");
-            }
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
 
             try
             {
-                var client =
-                    CreateClient(token);
+                var token =
+                    HttpContext.Session.GetString("JwtToken");
+
+                if (string.IsNullOrWhiteSpace(token))
+                {
+                    ErrorMessage =
+                        "You are not logged in.";
+
+                    await LoadUsersAsync();
+
+                    return Page();
+                }
+
+                var client = CreateClient(token);
 
                 var response =
                     await client.DeleteAsync(
                         $"api/Users/{id}");
 
-                var responseBody =
-                    await response.Content.ReadAsStringAsync();
-
                 if (response.IsSuccessStatusCode)
                 {
-                    return RedirectToPage();
+                    SuccessMessage =
+                        "User deleted successfully.";
+
+                    await LoadUsersAsync();
+
+                    return Page();
                 }
 
-                if (response.StatusCode ==
-                    HttpStatusCode.Unauthorized)
-                {
-                    HttpContext.Session.Clear();
-
-                    return RedirectToPage("/Login");
-                }
+                var error =
+                    await response.Content.ReadAsStringAsync();
 
                 ErrorMessage =
-                    $"API Error ({(int)response.StatusCode}): {responseBody}";
+                    $"Could not delete user. API response: {error}";
 
-                await LoadUsersAsync(token);
+                await LoadUsersAsync();
+
+                return Page();
             }
             catch (Exception ex)
             {
                 ErrorMessage =
-                    $"Connection Error: {ex.Message}";
+                    "Could not connect to the API: " +
+                    ex.Message;
 
-                await LoadUsersAsync(token);
+                await LoadUsersAsync();
+
+                return Page();
             }
-
-            return Page();
         }
 
-        // =====================================================
-        // HTTP CLIENT
-        // =====================================================
 
-        private HttpClient CreateClient(string token)
-        {
-            var client =
-                _httpClientFactory.CreateClient(
-                    "FoodOrderingAPI");
-
-            client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue(
-                    "Bearer",
-                    token);
-
-            return client;
-        }
-
-        // =====================================================
+        // =========================
         // LOAD USERS
-        // =====================================================
+        // =========================
 
         private async Task LoadUsersAsync(
-            string token,
+            string? firstName = null,
+            string? lastName = null,
             int page = 1,
-            int pageSize = 5,
-            string firstName = "",
-            string lastName = "",
-            string sortBy = "firstName")
+            int pageSize = 10,
+            string sortBy = "id")
         {
             try
             {
-                var client =
-                    CreateClient(token);
+                var token =
+                    HttpContext.Session.GetString("JwtToken");
+
+                if (string.IsNullOrWhiteSpace(token))
+                {
+                    ErrorMessage =
+                        "You are not logged in.";
+
+                    return;
+                }
+
+                var client = CreateClient(token);
 
                 var url =
-                    $"api/Users" +
-                    $"?page={page}" +
+                    $"api/Users?page={page}" +
                     $"&pageSize={pageSize}" +
                     $"&sortBy={Uri.EscapeDataString(sortBy)}";
 
@@ -553,77 +338,158 @@ namespace FoodOrderingSystem.Web.Pages
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Users =
-                        new List<UserViewModel>();
+                    var error =
+                        await response.Content.ReadAsStringAsync();
+
+                    ErrorMessage =
+                        $"Could not load users. API response: {error}";
 
                     return;
                 }
 
-                var json =
-                    await response.Content.ReadAsStringAsync();
+                var result =
+                    await response.Content
+                        .ReadFromJsonAsync<UserListResponse>();
+
+                if (result == null)
+                {
+                    ErrorMessage =
+                        "The API returned an empty response.";
+
+                    return;
+                }
 
                 Users =
-                    JsonSerializer.Deserialize<
-                        List<UserViewModel>>(
-                        json,
-                        new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        })
-                    ?? new List<UserViewModel>();
+                    result.Data ?? new List<UserViewModel>();
+
+                PageNumber = result.Page;
+                PageSize = result.PageSize;
+                TotalCount = result.TotalCount;
+                HasNextPage = result.HasNextPage;
+
+                SearchFirstName = firstName;
+                SearchLastName = lastName;
+                SortBy = sortBy;
             }
-            catch
+            catch (Exception ex)
             {
-                Users =
-                    new List<UserViewModel>();
+                ErrorMessage =
+                    "Could not connect to the API: " +
+                    ex.Message;
             }
         }
 
-        // =====================================================
+
+        // =========================
+        // HTTP CLIENT
+        // =========================
+
+        private HttpClient CreateClient(string? token = null)
+        {
+            var client =
+                _httpClientFactory.CreateClient("API");
+
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue(
+                        "Bearer",
+                        token);
+            }
+
+            return client;
+        }
+
+
+        // =========================
+        // USER INPUT MODEL
+        // =========================
+
+        public class UserInputModel
+        {
+            [Required]
+            [MaxLength(50)]
+            public string FirstName { get; set; } = string.Empty;
+
+            [Required]
+            [MaxLength(50)]
+            public string LastName { get; set; } = string.Empty;
+
+            [Required]
+            [EmailAddress]
+            [MaxLength(100)]
+            public string Email { get; set; } = string.Empty;
+
+            [Required]
+            [MinLength(6)]
+            [MaxLength(255)]
+            public string Password { get; set; } = string.Empty;
+
+            [Required]
+            [MaxLength(20)]
+            public string Phone { get; set; } = string.Empty;
+        }
+
+
+        // =========================
+        // EDIT MODEL
+        // =========================
+
+        public class UserEditModel
+        {
+            public int Id { get; set; }
+
+            public string FirstName { get; set; } = string.Empty;
+
+            public string LastName { get; set; } = string.Empty;
+
+            public string Email { get; set; } = string.Empty;
+
+            public string Password { get; set; } = string.Empty;
+
+            public string Phone { get; set; } = string.Empty;
+
+            public bool IsActive { get; set; }
+        }
+
+
+        // =========================
         // USER VIEW MODEL
-        // =====================================================
+        // =========================
 
         public class UserViewModel
         {
             public int Id { get; set; }
 
-            public string FirstName { get; set; } =
-                string.Empty;
+            public string FirstName { get; set; } = string.Empty;
 
-            public string LastName { get; set; } =
-                string.Empty;
+            public string LastName { get; set; } = string.Empty;
 
-            public string Email { get; set; } =
-                string.Empty;
+            public string Email { get; set; } = string.Empty;
 
-            public string Phone { get; set; } =
-                string.Empty;
+            public string Phone { get; set; } = string.Empty;
 
             public DateTime RegistrationDate { get; set; }
 
             public bool IsActive { get; set; }
         }
 
-        // =====================================================
-        // API INPUT MODEL
-        // =====================================================
 
-        public class UserInputModel
+        // =========================
+        // API RESPONSE
+        // =========================
+
+        public class UserListResponse
         {
-            public string FirstName { get; set; } =
-                string.Empty;
+            public int Page { get; set; }
 
-            public string LastName { get; set; } =
-                string.Empty;
+            public int PageSize { get; set; }
 
-            public string Email { get; set; } =
-                string.Empty;
+            public int TotalCount { get; set; }
 
-            public string Password { get; set; } =
-                string.Empty;
+            public bool HasNextPage { get; set; }
 
-            public string Phone { get; set; } =
-                string.Empty;
+            public List<UserViewModel>? Data { get; set; }
         }
     }
 }

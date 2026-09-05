@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -69,7 +68,6 @@ namespace FoodOrderingSystem.Web.Pages
 
         public string SuccessMessage { get; set; } = string.Empty;
 
-
         // =========================================================
         // GET
         // =========================================================
@@ -87,18 +85,21 @@ namespace FoodOrderingSystem.Web.Pages
                 var response = await client.GetAsync(
                     $"api/OrderItems/{editId.Value}");
 
-                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                if (response.StatusCode ==
+                    System.Net.HttpStatusCode.Unauthorized)
                 {
                     return RedirectToPage("/Login");
                 }
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    ErrorMessage = "Could not load the order item.";
+                    ErrorMessage =
+                        "Could not load the order item.";
                 }
                 else
                 {
-                    var json = await response.Content.ReadAsStringAsync();
+                    var json =
+                        await response.Content.ReadAsStringAsync();
 
                     var item =
                         JsonSerializer.Deserialize<OrderItemViewModel>(
@@ -127,7 +128,6 @@ namespace FoodOrderingSystem.Web.Pages
             return Page();
         }
 
-
         // =========================================================
         // ADD
         // =========================================================
@@ -136,38 +136,48 @@ namespace FoodOrderingSystem.Web.Pages
         {
             EditId = null;
 
-            // Clear automatic validation so we can validate manually
             ModelState.Clear();
 
             if (Input.OrderId <= 0)
             {
                 ErrorMessage = "Please select an Order.";
+
                 await LoadDropdownsAsync();
                 await LoadListAsync();
+
                 return Page();
             }
 
             if (Input.MenuItemId <= 0)
             {
                 ErrorMessage = "Please select a Menu Item.";
+
                 await LoadDropdownsAsync();
                 await LoadListAsync();
+
                 return Page();
             }
 
             if (Input.Quantity < 1 || Input.Quantity > 100)
             {
-                ErrorMessage = "Quantity must be between 1 and 100.";
+                ErrorMessage =
+                    "Quantity must be between 1 and 100.";
+
                 await LoadDropdownsAsync();
                 await LoadListAsync();
+
                 return Page();
             }
 
-            if (Input.UnitPrice <= 0 || Input.UnitPrice > 10000)
+            if (Input.UnitPrice <= 0 ||
+                Input.UnitPrice > 10000)
             {
-                ErrorMessage = "Unit price must be between 0.01 and 10000.";
+                ErrorMessage =
+                    "Unit price must be between 0.01 and 10000.";
+
                 await LoadDropdownsAsync();
                 await LoadListAsync();
+
                 return Page();
             }
 
@@ -186,7 +196,7 @@ namespace FoodOrderingSystem.Web.Pages
 
                 var json = JsonSerializer.Serialize(data);
 
-                var content = new StringContent(
+                using var content = new StringContent(
                     json,
                     Encoding.UTF8,
                     "application/json");
@@ -237,7 +247,6 @@ namespace FoodOrderingSystem.Web.Pages
             }
         }
 
-
         // =========================================================
         // EDIT
         // =========================================================
@@ -251,32 +260,43 @@ namespace FoodOrderingSystem.Web.Pages
             if (Input.OrderId <= 0)
             {
                 ErrorMessage = "Please select an Order.";
+
                 await LoadDropdownsAsync();
                 await LoadListAsync();
+
                 return Page();
             }
 
             if (Input.MenuItemId <= 0)
             {
                 ErrorMessage = "Please select a Menu Item.";
+
                 await LoadDropdownsAsync();
                 await LoadListAsync();
+
                 return Page();
             }
 
             if (Input.Quantity < 1 || Input.Quantity > 100)
             {
-                ErrorMessage = "Quantity must be between 1 and 100.";
+                ErrorMessage =
+                    "Quantity must be between 1 and 100.";
+
                 await LoadDropdownsAsync();
                 await LoadListAsync();
+
                 return Page();
             }
 
-            if (Input.UnitPrice <= 0 || Input.UnitPrice > 10000)
+            if (Input.UnitPrice <= 0 ||
+                Input.UnitPrice > 10000)
             {
-                ErrorMessage = "Unit price must be between 0.01 and 10000.";
+                ErrorMessage =
+                    "Unit price must be between 0.01 and 10000.";
+
                 await LoadDropdownsAsync();
                 await LoadListAsync();
+
                 return Page();
             }
 
@@ -296,7 +316,7 @@ namespace FoodOrderingSystem.Web.Pages
 
                 var json = JsonSerializer.Serialize(data);
 
-                var content = new StringContent(
+                using var content = new StringContent(
                     json,
                     Encoding.UTF8,
                     "application/json");
@@ -349,7 +369,6 @@ namespace FoodOrderingSystem.Web.Pages
             }
         }
 
-
         // =========================================================
         // DELETE
         // =========================================================
@@ -371,8 +390,11 @@ namespace FoodOrderingSystem.Web.Pages
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    var error =
+                        await response.Content.ReadAsStringAsync();
+
                     ErrorMessage =
-                        "Could not delete the order item.";
+                        $"Could not delete the order item. {error}";
                 }
                 else
                 {
@@ -392,7 +414,6 @@ namespace FoodOrderingSystem.Web.Pages
             return Page();
         }
 
-
         // =========================================================
         // LOAD LIST
         // =========================================================
@@ -402,10 +423,19 @@ namespace FoodOrderingSystem.Web.Pages
             try
             {
                 if (Page < 1)
+                {
                     Page = 1;
+                }
 
                 if (PageSize < 1)
+                {
                     PageSize = 5;
+                }
+
+                if (PageSize > 100)
+                {
+                    PageSize = 100;
+                }
 
                 var client = CreateClient();
 
@@ -416,12 +446,14 @@ namespace FoodOrderingSystem.Web.Pages
 
                 if (SearchOrderId.HasValue)
                 {
-                    url += $"&orderId={SearchOrderId.Value}";
+                    url +=
+                        $"&orderId={SearchOrderId.Value}";
                 }
 
                 if (SearchMenuItemId.HasValue)
                 {
-                    url += $"&menuItemId={SearchMenuItemId.Value}";
+                    url +=
+                        $"&menuItemId={SearchMenuItemId.Value}";
                 }
 
                 var response = await client.GetAsync(url);
@@ -448,17 +480,16 @@ namespace FoodOrderingSystem.Web.Pages
                             PropertyNameCaseInsensitive = true
                         });
 
-                OrderItems = result ?? new();
+                OrderItems = result ?? new List<OrderItemViewModel>();
 
                 HasNextPage =
                     OrderItems.Count == PageSize;
             }
             catch
             {
-                OrderItems = new();
+                OrderItems = new List<OrderItemViewModel>();
             }
         }
-
 
         // =========================================================
         // LOAD DROPDOWNS
@@ -467,19 +498,26 @@ namespace FoodOrderingSystem.Web.Pages
         private async Task LoadDropdownsAsync()
         {
             OrderOptions = new List<SelectListItem>();
+
             MenuItemOptions = new List<SelectListItem>();
 
             try
             {
                 var client = CreateClient();
 
-                // -------------------------------------------------
+                // =====================================================
                 // ORDERS
-                // -------------------------------------------------
+                // =====================================================
 
                 var ordersResponse =
                     await client.GetAsync(
                         "api/Orders?page=1&pageSize=100&sortBy=date");
+
+                if (ordersResponse.StatusCode ==
+                    System.Net.HttpStatusCode.Unauthorized)
+                {
+                    return;
+                }
 
                 if (ordersResponse.IsSuccessStatusCode)
                 {
@@ -501,7 +539,9 @@ namespace FoodOrderingSystem.Web.Pages
                             OrderOptions.Add(
                                 new SelectListItem
                                 {
-                                    Value = order.Id.ToString(),
+                                    Value =
+                                        order.Id.ToString(),
+
                                     Text =
                                         $"Order #{order.Id} - {order.TotalPrice:F2}"
                                 });
@@ -509,13 +549,19 @@ namespace FoodOrderingSystem.Web.Pages
                     }
                 }
 
-                // -------------------------------------------------
+                // =====================================================
                 // MENU ITEMS
-                // -------------------------------------------------
+                // =====================================================
 
                 var menuResponse =
                     await client.GetAsync(
                         "api/MenuItems?page=1&pageSize=100&sortBy=name");
+
+                if (menuResponse.StatusCode ==
+                    System.Net.HttpStatusCode.Unauthorized)
+                {
+                    return;
+                }
 
                 if (menuResponse.IsSuccessStatusCode)
                 {
@@ -537,7 +583,9 @@ namespace FoodOrderingSystem.Web.Pages
                             MenuItemOptions.Add(
                                 new SelectListItem
                                 {
-                                    Value = menuItem.Id.ToString(),
+                                    Value =
+                                        menuItem.Id.ToString(),
+
                                     Text =
                                         $"#{menuItem.Id} - {menuItem.Name} - {menuItem.Price:F2}"
                                 });
@@ -547,10 +595,9 @@ namespace FoodOrderingSystem.Web.Pages
             }
             catch
             {
-                // Keep empty dropdowns if API cannot be reached.
+                // Keep dropdowns empty if API cannot be reached.
             }
         }
-
 
         // =========================================================
         // HTTP CLIENT
@@ -559,8 +606,7 @@ namespace FoodOrderingSystem.Web.Pages
         private HttpClient CreateClient()
         {
             var client =
-                _httpClientFactory.CreateClient(
-                    "FoodOrderingAPI");
+                _httpClientFactory.CreateClient("API");
 
             var token =
                 HttpContext.Session.GetString("JwtToken");
@@ -575,7 +621,6 @@ namespace FoodOrderingSystem.Web.Pages
 
             return client;
         }
-
 
         // =========================================================
         // VIEW MODELS
@@ -596,7 +641,6 @@ namespace FoodOrderingSystem.Web.Pages
             public string Notes { get; set; } = string.Empty;
         }
 
-
         public class OrderItemInputModel
         {
             public int OrderId { get; set; }
@@ -610,14 +654,12 @@ namespace FoodOrderingSystem.Web.Pages
             public string Notes { get; set; } = string.Empty;
         }
 
-
         public class OrderOption
         {
             public int Id { get; set; }
 
             public decimal TotalPrice { get; set; }
         }
-
 
         public class MenuItemOption
         {

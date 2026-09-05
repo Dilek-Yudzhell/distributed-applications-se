@@ -1,22 +1,13 @@
+using System.Net.Http.Headers;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// ==========================================
-// RAZOR PAGES
-// ==========================================
 builder.Services.AddRazorPages();
 
-// ==========================================
-// HTTP CLIENT - FOOD ORDERING API
-// ==========================================
-builder.Services.AddHttpClient("FoodOrderingAPI", client =>
+builder.Services.AddHttpClient("API", client =>
 {
     client.BaseAddress = new Uri("https://localhost:7297/");
 });
-
-// ==========================================
-// SESSION
-// ==========================================
-builder.Services.AddDistributedMemoryCache();
 
 builder.Services.AddSession(options =>
 {
@@ -25,43 +16,24 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// ==========================================
-// BUILD APPLICATION
-// ==========================================
 var app = builder.Build();
 
-// ==========================================
-// ERROR HANDLING
-// ==========================================
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
 
-// ==========================================
-// HTTPS
-// ==========================================
 app.UseHttpsRedirection();
 
-// ==========================================
-// STATIC FILES
-// ==========================================
 app.UseStaticFiles();
 
-// ==========================================
-// ROUTING
-// ==========================================
 app.UseRouting();
 
-// ==========================================
-// SESSION
-// ==========================================
 app.UseSession();
 
-// ==========================================
-// RAZOR PAGES
-// ==========================================
+app.UseAuthorization();
+
 app.MapRazorPages();
 
 app.Run();

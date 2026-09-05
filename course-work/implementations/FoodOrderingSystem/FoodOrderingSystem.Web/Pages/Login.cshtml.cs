@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
@@ -30,7 +29,6 @@ namespace FoodOrderingSystem.Web.Pages
 
         public async Task<IActionResult> OnPostAsync()
         {
-            // Check empty fields
             if (string.IsNullOrWhiteSpace(Email) ||
                 string.IsNullOrWhiteSpace(Password))
             {
@@ -42,33 +40,27 @@ namespace FoodOrderingSystem.Web.Pages
 
             try
             {
-                // Create API client
                 var client =
-                    _httpClientFactory.CreateClient(
-                        "FoodOrderingAPI");
+                    _httpClientFactory.CreateClient("API");
 
-                // Login data
                 var loginData = new
                 {
                     email = Email.Trim(),
                     password = Password
                 };
 
-                // Convert to JSON
                 var json =
                     JsonSerializer.Serialize(loginData);
 
-                var content = new StringContent(
+                using var content = new StringContent(
                     json,
                     Encoding.UTF8,
                     "application/json");
 
-                // Send login request
                 var response = await client.PostAsync(
                     "api/Login",
                     content);
 
-                // Login failed
                 if (!response.IsSuccessStatusCode)
                 {
                     ErrorMessage =
@@ -77,15 +69,12 @@ namespace FoodOrderingSystem.Web.Pages
                     return Page();
                 }
 
-                // Read API response
                 var responseBody =
-                    await response.Content
-                        .ReadAsStringAsync();
+                    await response.Content.ReadAsStringAsync();
 
                 using var document =
                     JsonDocument.Parse(responseBody);
 
-                // Check token
                 if (!document.RootElement.TryGetProperty(
                         "token",
                         out var tokenProperty))
@@ -107,12 +96,10 @@ namespace FoodOrderingSystem.Web.Pages
                     return Page();
                 }
 
-                // Save JWT token to session
                 HttpContext.Session.SetString(
                     "JwtToken",
                     token);
 
-                // Save first name
                 if (document.RootElement.TryGetProperty(
                         "firstName",
                         out var firstNameProperty))
@@ -122,7 +109,6 @@ namespace FoodOrderingSystem.Web.Pages
                         firstNameProperty.GetString() ?? "");
                 }
 
-                // Save user ID
                 if (document.RootElement.TryGetProperty(
                         "userId",
                         out var userIdProperty))
@@ -132,7 +118,6 @@ namespace FoodOrderingSystem.Web.Pages
                         userIdProperty.GetInt32().ToString());
                 }
 
-                // Save email
                 if (document.RootElement.TryGetProperty(
                         "email",
                         out var emailProperty))
@@ -142,13 +127,12 @@ namespace FoodOrderingSystem.Web.Pages
                         emailProperty.GetString() ?? "");
                 }
 
-                // Redirect after successful login
                 return RedirectToPage("/Index");
             }
-            catch
+            catch (Exception ex)
             {
                 ErrorMessage =
-                    "Could not connect to the API.";
+                    "Could not connect to the API: " + ex.Message;
 
                 return Page();
             }

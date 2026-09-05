@@ -22,11 +22,15 @@ namespace FoodOrderingSystem.API.Services
                 exception,
                 "An unexpected error occurred.");
 
+            var detail =
+                exception.InnerException?.Message
+                ?? exception.Message;
+
             var problemDetails = new ProblemDetails
             {
                 Status = StatusCodes.Status500InternalServerError,
                 Title = "Internal Server Error",
-                Detail = "Възникна неочаквана грешка. Моля, опитайте отново.",
+                Detail = detail,
                 Instance = httpContext.Request.Path
             };
 

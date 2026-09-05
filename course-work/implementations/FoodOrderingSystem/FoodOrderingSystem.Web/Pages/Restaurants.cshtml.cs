@@ -10,7 +10,8 @@ namespace FoodOrderingSystem.Web.Pages
     {
         private readonly IHttpClientFactory _httpClientFactory;
 
-        public RestaurantsModel(IHttpClientFactory httpClientFactory)
+        public RestaurantsModel(
+            IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
         }
@@ -21,18 +22,18 @@ namespace FoodOrderingSystem.Web.Pages
 
         public string SuccessMessage { get; set; } = string.Empty;
 
-        // ==========================================
+        // ================================
         // GET RESTAURANTS
-        // ==========================================
+        // ================================
 
         public async Task<IActionResult> OnGetAsync()
         {
             return await LoadRestaurantsAsync();
         }
 
-        // ==========================================
+        // ================================
         // ADD RESTAURANT
-        // ==========================================
+        // ================================
 
         public async Task<IActionResult> OnPostAddAsync(
             string name,
@@ -42,7 +43,8 @@ namespace FoodOrderingSystem.Web.Pages
             decimal rating,
             bool isActive)
         {
-            var token = HttpContext.Session.GetString("JwtToken");
+            var token =
+                HttpContext.Session.GetString("JwtToken");
 
             if (string.IsNullOrWhiteSpace(token))
             {
@@ -54,7 +56,8 @@ namespace FoodOrderingSystem.Web.Pages
                 string.IsNullOrWhiteSpace(phone) ||
                 string.IsNullOrWhiteSpace(cuisineType))
             {
-                ErrorMessage = "Please fill in all required fields.";
+                ErrorMessage =
+                    "Please fill in all required fields.";
 
                 await LoadRestaurantsAsync();
 
@@ -63,7 +66,8 @@ namespace FoodOrderingSystem.Web.Pages
 
             if (rating < 0 || rating > 5)
             {
-                ErrorMessage = "Rating must be between 0 and 5.";
+                ErrorMessage =
+                    "Rating must be between 0 and 5.";
 
                 await LoadRestaurantsAsync();
 
@@ -72,29 +76,33 @@ namespace FoodOrderingSystem.Web.Pages
 
             try
             {
-                var client = CreateAuthenticatedClient(token);
+                var client =
+                    CreateAuthenticatedClient(token);
 
                 var restaurant = new
                 {
-                    name = name,
-                    address = address,
-                    phone = phone,
-                    cuisineType = cuisineType,
+                    name = name.Trim(),
+                    address = address.Trim(),
+                    phone = phone.Trim(),
+                    cuisineType = cuisineType.Trim(),
                     rating = rating,
                     createdDate = DateTime.UtcNow,
                     isActive = isActive
                 };
 
-                var json = JsonSerializer.Serialize(restaurant);
+                var json =
+                    JsonSerializer.Serialize(restaurant);
 
-                var content = new StringContent(
-                    json,
-                    Encoding.UTF8,
-                    "application/json");
+                using var content =
+                    new StringContent(
+                        json,
+                        Encoding.UTF8,
+                        "application/json");
 
-                var response = await client.PostAsync(
-                    "api/Restaurants",
-                    content);
+                var response =
+                    await client.PostAsync(
+                        "api/Restaurants",
+                        content);
 
                 if (response.StatusCode ==
                     System.Net.HttpStatusCode.Unauthorized)
@@ -106,22 +114,26 @@ namespace FoodOrderingSystem.Web.Pages
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    ErrorMessage = "Could not add restaurant.";
+                    ErrorMessage =
+                        await GetApiErrorMessage(response);
 
                     await LoadRestaurantsAsync();
 
                     return Page();
                 }
 
-                SuccessMessage = "Restaurant added successfully.";
+                SuccessMessage =
+                    "Restaurant added successfully.";
 
                 await LoadRestaurantsAsync();
 
                 return Page();
             }
-            catch
+            catch (Exception ex)
             {
-                ErrorMessage = "Could not connect to the API.";
+                ErrorMessage =
+                    "Could not connect to the API: " +
+                    ex.Message;
 
                 await LoadRestaurantsAsync();
 
@@ -129,9 +141,9 @@ namespace FoodOrderingSystem.Web.Pages
             }
         }
 
-        // ==========================================
-        // UPDATE RESTAURANT
-        // ==========================================
+        // ================================
+        // EDIT RESTAURANT
+        // ================================
 
         public async Task<IActionResult> OnPostEditAsync(
             int id,
@@ -142,7 +154,8 @@ namespace FoodOrderingSystem.Web.Pages
             decimal rating,
             bool isActive)
         {
-            var token = HttpContext.Session.GetString("JwtToken");
+            var token =
+                HttpContext.Session.GetString("JwtToken");
 
             if (string.IsNullOrWhiteSpace(token))
             {
@@ -155,7 +168,8 @@ namespace FoodOrderingSystem.Web.Pages
                 string.IsNullOrWhiteSpace(phone) ||
                 string.IsNullOrWhiteSpace(cuisineType))
             {
-                ErrorMessage = "Please enter valid restaurant information.";
+                ErrorMessage =
+                    "Please enter valid restaurant information.";
 
                 await LoadRestaurantsAsync();
 
@@ -164,7 +178,8 @@ namespace FoodOrderingSystem.Web.Pages
 
             if (rating < 0 || rating > 5)
             {
-                ErrorMessage = "Rating must be between 0 and 5.";
+                ErrorMessage =
+                    "Rating must be between 0 and 5.";
 
                 await LoadRestaurantsAsync();
 
@@ -173,10 +188,12 @@ namespace FoodOrderingSystem.Web.Pages
 
             try
             {
-                var client = CreateAuthenticatedClient(token);
+                var client =
+                    CreateAuthenticatedClient(token);
 
-                var existingResponse = await client.GetAsync(
-                    $"api/Restaurants/{id}");
+                var existingResponse =
+                    await client.GetAsync(
+                        $"api/Restaurants/{id}");
 
                 if (existingResponse.StatusCode ==
                     System.Net.HttpStatusCode.Unauthorized)
@@ -188,7 +205,8 @@ namespace FoodOrderingSystem.Web.Pages
 
                 if (!existingResponse.IsSuccessStatusCode)
                 {
-                    ErrorMessage = "Restaurant was not found.";
+                    ErrorMessage =
+                        "Restaurant was not found.";
 
                     await LoadRestaurantsAsync();
 
@@ -196,39 +214,45 @@ namespace FoodOrderingSystem.Web.Pages
                 }
 
                 var existingJson =
-                    await existingResponse.Content.ReadAsStringAsync();
+                    await existingResponse.Content
+                        .ReadAsStringAsync();
 
                 var existingRestaurant =
-                    JsonSerializer.Deserialize<RestaurantViewModel>(
-                        existingJson,
-                        new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
+                    JsonSerializer.Deserialize<
+                        RestaurantViewModel>(
+                            existingJson,
+                            new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true
+                            });
 
                 var restaurant = new
                 {
                     id = id,
-                    name = name,
-                    address = address,
-                    phone = phone,
-                    cuisineType = cuisineType,
+                    name = name.Trim(),
+                    address = address.Trim(),
+                    phone = phone.Trim(),
+                    cuisineType = cuisineType.Trim(),
                     rating = rating,
-                    createdDate = existingRestaurant?.CreatedDate ??
-                                  DateTime.UtcNow,
+                    createdDate =
+                        existingRestaurant?.CreatedDate
+                        ?? DateTime.UtcNow,
                     isActive = isActive
                 };
 
-                var json = JsonSerializer.Serialize(restaurant);
+                var json =
+                    JsonSerializer.Serialize(restaurant);
 
-                var content = new StringContent(
-                    json,
-                    Encoding.UTF8,
-                    "application/json");
+                using var content =
+                    new StringContent(
+                        json,
+                        Encoding.UTF8,
+                        "application/json");
 
-                var response = await client.PutAsync(
-                    $"api/Restaurants/{id}",
-                    content);
+                var response =
+                    await client.PutAsync(
+                        $"api/Restaurants/{id}",
+                        content);
 
                 if (response.StatusCode ==
                     System.Net.HttpStatusCode.Unauthorized)
@@ -240,22 +264,26 @@ namespace FoodOrderingSystem.Web.Pages
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    ErrorMessage = "Could not update restaurant.";
+                    ErrorMessage =
+                        await GetApiErrorMessage(response);
 
                     await LoadRestaurantsAsync();
 
                     return Page();
                 }
 
-                SuccessMessage = "Restaurant updated successfully.";
+                SuccessMessage =
+                    "Restaurant updated successfully.";
 
                 await LoadRestaurantsAsync();
 
                 return Page();
             }
-            catch
+            catch (Exception ex)
             {
-                ErrorMessage = "Could not connect to the API.";
+                ErrorMessage =
+                    "Could not connect to the API: " +
+                    ex.Message;
 
                 await LoadRestaurantsAsync();
 
@@ -263,13 +291,15 @@ namespace FoodOrderingSystem.Web.Pages
             }
         }
 
-        // ==========================================
+        // ================================
         // DELETE RESTAURANT
-        // ==========================================
+        // ================================
 
-        public async Task<IActionResult> OnPostDeleteAsync(int id)
+        public async Task<IActionResult> OnPostDeleteAsync(
+            int id)
         {
-            var token = HttpContext.Session.GetString("JwtToken");
+            var token =
+                HttpContext.Session.GetString("JwtToken");
 
             if (string.IsNullOrWhiteSpace(token))
             {
@@ -278,10 +308,12 @@ namespace FoodOrderingSystem.Web.Pages
 
             try
             {
-                var client = CreateAuthenticatedClient(token);
+                var client =
+                    CreateAuthenticatedClient(token);
 
-                var response = await client.DeleteAsync(
-                    $"api/Restaurants/{id}");
+                var response =
+                    await client.DeleteAsync(
+                        $"api/Restaurants/{id}");
 
                 if (response.StatusCode ==
                     System.Net.HttpStatusCode.Unauthorized)
@@ -293,22 +325,26 @@ namespace FoodOrderingSystem.Web.Pages
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    ErrorMessage = "Could not delete restaurant.";
+                    ErrorMessage =
+                        await GetApiErrorMessage(response);
 
                     await LoadRestaurantsAsync();
 
                     return Page();
                 }
 
-                SuccessMessage = "Restaurant deleted successfully.";
+                SuccessMessage =
+                    "Restaurant deleted successfully.";
 
                 await LoadRestaurantsAsync();
 
                 return Page();
             }
-            catch
+            catch (Exception ex)
             {
-                ErrorMessage = "Could not connect to the API.";
+                ErrorMessage =
+                    "Could not connect to the API: " +
+                    ex.Message;
 
                 await LoadRestaurantsAsync();
 
@@ -316,13 +352,14 @@ namespace FoodOrderingSystem.Web.Pages
             }
         }
 
-        // ==========================================
+        // ================================
         // LOAD RESTAURANTS
-        // ==========================================
+        // ================================
 
         private async Task<IActionResult> LoadRestaurantsAsync()
         {
-            var token = HttpContext.Session.GetString("JwtToken");
+            var token =
+                HttpContext.Session.GetString("JwtToken");
 
             if (string.IsNullOrWhiteSpace(token))
             {
@@ -331,10 +368,12 @@ namespace FoodOrderingSystem.Web.Pages
 
             try
             {
-                var client = CreateAuthenticatedClient(token);
+                var client =
+                    CreateAuthenticatedClient(token);
 
-                var response = await client.GetAsync(
-                    "api/Restaurants");
+                var response =
+                    await client.GetAsync(
+                        "api/Restaurants");
 
                 if (response.StatusCode ==
                     System.Net.HttpStatusCode.Unauthorized)
@@ -346,63 +385,141 @@ namespace FoodOrderingSystem.Web.Pages
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    ErrorMessage = "Could not load restaurants.";
+                    ErrorMessage =
+                        await GetApiErrorMessage(response);
 
                     return Page();
                 }
 
                 var json =
-                    await response.Content.ReadAsStringAsync();
+                    await response.Content
+                        .ReadAsStringAsync();
 
                 Restaurants =
-                    JsonSerializer.Deserialize<List<RestaurantViewModel>>(
-                        json,
-                        new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        }
-                    ) ?? new List<RestaurantViewModel>();
+                    JsonSerializer.Deserialize<
+                        List<RestaurantViewModel>>(
+                            json,
+                            new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true
+                            })
+                    ?? new List<RestaurantViewModel>();
 
                 return Page();
             }
-            catch
+            catch (Exception ex)
             {
-                ErrorMessage = "Could not connect to the API.";
+                ErrorMessage =
+                    "Could not connect to the API: " +
+                    ex.Message;
 
                 return Page();
             }
         }
 
-        // ==========================================
+        // ================================
         // AUTHENTICATED HTTP CLIENT
-        // ==========================================
+        // ================================
 
-        private HttpClient CreateAuthenticatedClient(string token)
+        private HttpClient CreateAuthenticatedClient(
+            string token)
         {
+            // ВАЖНО:
+            // Тук трябва да бъде "API",
+            // а не "FoodOrderingAPI".
+
             var client =
-                _httpClientFactory.CreateClient("FoodOrderingAPI");
+                _httpClientFactory.CreateClient("API");
 
             client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
+                new AuthenticationHeaderValue(
+                    "Bearer",
+                    token);
 
             return client;
         }
 
-        // ==========================================
-        // RESTAURANT VIEW MODEL
-        // ==========================================
+        // ================================
+        // API ERROR MESSAGE
+        // ================================
+
+        private async Task<string> GetApiErrorMessage(
+            HttpResponseMessage response)
+        {
+            var body =
+                await response.Content
+                    .ReadAsStringAsync();
+
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                return
+                    $"API Error ({(int)response.StatusCode}): " +
+                    response.ReasonPhrase;
+            }
+
+            try
+            {
+                using var document =
+                    JsonDocument.Parse(body);
+
+                var root =
+                    document.RootElement;
+
+                if (root.TryGetProperty(
+                    "message",
+                    out var message))
+                {
+                    return
+                        $"API Error ({(int)response.StatusCode}): " +
+                        message.GetString();
+                }
+
+                if (root.TryGetProperty(
+                    "detail",
+                    out var detail))
+                {
+                    return
+                        $"API Error ({(int)response.StatusCode}): " +
+                        detail.GetString();
+                }
+
+                if (root.TryGetProperty(
+                    "title",
+                    out var title))
+                {
+                    return
+                        $"API Error ({(int)response.StatusCode}): " +
+                        title.GetString();
+                }
+            }
+            catch
+            {
+            }
+
+            return
+                $"API Error ({(int)response.StatusCode}): " +
+                body;
+        }
+
+        // ================================
+        // VIEW MODEL
+        // ================================
 
         public class RestaurantViewModel
         {
             public int Id { get; set; }
 
-            public string Name { get; set; } = string.Empty;
+            public string Name { get; set; } =
+                string.Empty;
 
-            public string Address { get; set; } = string.Empty;
+            public string Address { get; set; } =
+                string.Empty;
 
-            public string Phone { get; set; } = string.Empty;
+            public string Phone { get; set; } =
+                string.Empty;
 
-            public string CuisineType { get; set; } = string.Empty;
+            public string CuisineType { get; set; } =
+                string.Empty;
 
             public decimal Rating { get; set; }
 

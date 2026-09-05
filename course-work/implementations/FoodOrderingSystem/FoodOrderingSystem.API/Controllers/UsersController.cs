@@ -39,34 +39,38 @@ namespace FoodOrderingSystem.API.Controllers
         {
             if (page < 1)
             {
-                return BadRequest("Page must be greater than 0.");
+                return BadRequest(
+                    new
+                    {
+                        message = "Page must be greater than 0."
+                    });
             }
 
             if (pageSize < 1 || pageSize > 100)
             {
                 return BadRequest(
-                    "Page size must be between 1 and 100.");
+                    new
+                    {
+                        message = "Page size must be between 1 and 100."
+                    });
             }
 
             var query = _context.Users
                 .AsNoTracking()
                 .AsQueryable();
 
-            // Search by first name
             if (!string.IsNullOrWhiteSpace(firstName))
             {
                 query = query.Where(u =>
                     u.FirstName.Contains(firstName));
             }
 
-            // Search by last name
             if (!string.IsNullOrWhiteSpace(lastName))
             {
                 query = query.Where(u =>
                     u.LastName.Contains(lastName));
             }
 
-            // Sorting
             query = sortBy.ToLower() switch
             {
                 "firstname" =>
@@ -89,30 +93,35 @@ namespace FoodOrderingSystem.API.Controllers
                         "Invalid sortBy value.")
             };
 
-            var totalCount = await query.CountAsync();
+            var totalCount =
+                await query.CountAsync();
 
-            var users = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(u => new UserDto
-                {
-                    Id = u.Id,
-                    FirstName = u.FirstName,
-                    LastName = u.LastName,
-                    Email = u.Email,
-                    Phone = u.Phone,
-                    RegistrationDate = u.RegistrationDate,
-                    IsActive = u.IsActive
-                })
-                .ToListAsync();
+            var users =
+                await query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(u => new UserDto
+                    {
+                        Id = u.Id,
+                        FirstName = u.FirstName,
+                        LastName = u.LastName,
+                        Email = u.Email,
+                        Phone = u.Phone,
+                        RegistrationDate =
+                            u.RegistrationDate,
+                        IsActive = u.IsActive
+                    })
+                    .ToListAsync();
 
             return Ok(new
             {
                 page,
                 pageSize,
                 totalCount,
+
                 hasNextPage =
                     page * pageSize < totalCount,
+
                 data = users
             });
         }
@@ -124,20 +133,22 @@ namespace FoodOrderingSystem.API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUser(int id)
         {
-            var user = await _context.Users
-                .AsNoTracking()
-                .Where(u => u.Id == id)
-                .Select(u => new UserDto
-                {
-                    Id = u.Id,
-                    FirstName = u.FirstName,
-                    LastName = u.LastName,
-                    Email = u.Email,
-                    Phone = u.Phone,
-                    RegistrationDate = u.RegistrationDate,
-                    IsActive = u.IsActive
-                })
-                .FirstOrDefaultAsync();
+            var user =
+                await _context.Users
+                    .AsNoTracking()
+                    .Where(u => u.Id == id)
+                    .Select(u => new UserDto
+                    {
+                        Id = u.Id,
+                        FirstName = u.FirstName,
+                        LastName = u.LastName,
+                        Email = u.Email,
+                        Phone = u.Phone,
+                        RegistrationDate =
+                            u.RegistrationDate,
+                        IsActive = u.IsActive
+                    })
+                    .FirstOrDefaultAsync();
 
             if (user == null)
             {
@@ -153,7 +164,6 @@ namespace FoodOrderingSystem.API.Controllers
 
         // =========================================================
         // POST: api/Users
-        // Registration does not require JWT
         // =========================================================
 
         [HttpPost]
@@ -166,8 +176,9 @@ namespace FoodOrderingSystem.API.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            var emailExists = await _context.Users
-                .AnyAsync(u => u.Email == dto.Email);
+            var emailExists =
+                await _context.Users
+                    .AnyAsync(u => u.Email == dto.Email);
 
             if (emailExists)
             {
@@ -183,10 +194,16 @@ namespace FoodOrderingSystem.API.Controllers
                 FirstName = dto.FirstName.Trim(),
                 LastName = dto.LastName.Trim(),
                 Email = dto.Email.Trim(),
-                Password = _passwordService
-                    .HashPassword(dto.Password),
+
+                Password =
+                    _passwordService
+                        .HashPassword(dto.Password),
+
                 Phone = dto.Phone.Trim(),
-                RegistrationDate = DateTime.UtcNow,
+
+                RegistrationDate =
+                    DateTime.UtcNow,
+
                 IsActive = true
             };
 
@@ -214,7 +231,6 @@ namespace FoodOrderingSystem.API.Controllers
 
         // =========================================================
         // PUT: api/Users/5
-        // Uses UpdateUserDto
         // =========================================================
 
         [HttpPut("{id}")]
@@ -227,8 +243,9 @@ namespace FoodOrderingSystem.API.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Id == id);
+            var user =
+                await _context.Users
+                    .FirstOrDefaultAsync(u => u.Id == id);
 
             if (user == null)
             {
@@ -239,11 +256,11 @@ namespace FoodOrderingSystem.API.Controllers
                     });
             }
 
-            // Check whether another user already uses this email
-            var emailExists = await _context.Users
-                .AnyAsync(u =>
-                    u.Email == dto.Email &&
-                    u.Id != id);
+            var emailExists =
+                await _context.Users
+                    .AnyAsync(u =>
+                        u.Email == dto.Email &&
+                        u.Id != id);
 
             if (emailExists)
             {
@@ -254,14 +271,21 @@ namespace FoodOrderingSystem.API.Controllers
                     });
             }
 
-            user.FirstName = dto.FirstName.Trim();
-            user.LastName = dto.LastName.Trim();
-            user.Email = dto.Email.Trim();
-            user.Phone = dto.Phone.Trim();
-            user.IsActive = dto.IsActive;
+            user.FirstName =
+                dto.FirstName.Trim();
 
-            // Password is optional during update.
-            // If provided, hash the new password.
+            user.LastName =
+                dto.LastName.Trim();
+
+            user.Email =
+                dto.Email.Trim();
+
+            user.Phone =
+                dto.Phone.Trim();
+
+            user.IsActive =
+                dto.IsActive;
+
             if (!string.IsNullOrWhiteSpace(dto.Password))
             {
                 user.Password =
@@ -281,8 +305,9 @@ namespace FoodOrderingSystem.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Id == id);
+            var user =
+                await _context.Users
+                    .FirstOrDefaultAsync(u => u.Id == id);
 
             if (user == null)
             {
@@ -290,6 +315,21 @@ namespace FoodOrderingSystem.API.Controllers
                     new
                     {
                         message = "User not found."
+                    });
+            }
+
+            // Check if the user has existing orders.
+            var hasOrders =
+                await _context.Orders
+                    .AnyAsync(o => o.UserId == id);
+
+            if (hasOrders)
+            {
+                return Conflict(
+                    new
+                    {
+                        message =
+                            "This user cannot be deleted because the user has existing orders."
                     });
             }
 
